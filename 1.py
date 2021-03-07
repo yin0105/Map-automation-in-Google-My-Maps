@@ -103,43 +103,43 @@ def google_click_next_button(driver):
     print("next button is not ready")
     pass
 
-def google_is_security_question_required(driver):
-  try:
-    element = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, '//*[@id="content"]/div/div')))
-    return element.text != "Request lacked state, may have been forged"
-  except:
-    pass
-  return True
+# def google_is_security_question_required(driver):
+#   try:
+#     element = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, '//*[@id="content"]/div/div')))
+#     return element.text != "Request lacked state, may have been forged"
+#   except:
+#     pass
+#   return True
 
-@fail_with_error("Cannot select security question as a login method")
-def google_select_security_question_as_login_method(driver):
-  try:
-    element = WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="view_container"]/div/div/div[2]/div/div[1]/div/form/span/section/div/div/div/ul/li[1]')))
-    element.click()
-    print("Log with security question")
-  except TimeoutException:
-    print("security question field is not ready")
-    pass
+# @fail_with_error("Cannot select security question as a login method")
+# def google_select_security_question_as_login_method(driver):
+#   try:
+#     element = WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="view_container"]/div/div/div[2]/div/div[1]/div/form/span/section/div/div/div/ul/li[1]')))
+#     element.click()
+#     print("Log with security question")
+#   except TimeoutException:
+#     print("security question field is not ready")
+#     pass
 
-@fail_with_error("Cannot set security answer")
-def google_set_security_ansver(driver, answer):
-  try:
-    security_question_field = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, '/html/body/div[1]/div[1]/div[2]/div/div[2]/div/div/div[2]/div/div[1]/div/form/span/section/div/div/div[2]/div/div[1]/div/div[1]/input')))
-    security_question_field.send_keys(answer)
-    print("Security question answer inserted")
-  except TimeoutException:
-    print("security question answer field is not ready")
-    pass
+# @fail_with_error("Cannot set security answer")
+# def google_set_security_ansver(driver, answer):
+#   try:
+#     security_question_field = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, '/html/body/div[1]/div[1]/div[2]/div/div[2]/div/div/div[2]/div/div[1]/div/form/span/section/div/div/div[2]/div/div[1]/div/div[1]/input')))
+#     security_question_field.send_keys(answer)
+#     print("Security question answer inserted")
+#   except TimeoutException:
+#     print("security question answer field is not ready")
+#     pass
 
-@fail_with_error("Cannot confirm security answer")
-def google_confirm_security_question(driver):
-  try:
-    security_question_confirm_button = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, '//*[@id="view_container"]/div/div/div[2]/div/div[2]/div/div[1]/div/div/button')))
-    security_question_confirm_button.click()
-    print("Security question confirm button clicked")
-  except TimeoutException:
-    print("security question confirm button is not ready")
-    pass
+# @fail_with_error("Cannot confirm security answer")
+# def google_confirm_security_question(driver):
+#   try:
+#     security_question_confirm_button = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, '//*[@id="view_container"]/div/div/div[2]/div/div[2]/div/div[1]/div/div/button')))
+#     security_question_confirm_button.click()
+#     print("Security question confirm button clicked")
+#   except TimeoutException:
+#     print("security question confirm button is not ready")
+#     pass
 
 def googleLogin(mail, driver) :
   print("gmail logging in...")
@@ -153,10 +153,10 @@ def googleLogin(mail, driver) :
   google_set_password(driver, mail_pass)
   google_click_next_button(driver)
 
-  if google_is_security_question_required(driver):
-    google_select_security_question_as_login_method(driver)
-    google_set_security_ansver(driver, mail_active)
-    google_confirm_security_question(driver)
+#   if google_is_security_question_required(driver):
+#     google_select_security_question_as_login_method(driver)
+#     google_set_security_ansver(driver, mail_active)
+#     google_confirm_security_question(driver)
 
 
 work_log(["1", 'janwheeler197335@gmail.com', 'aleiivrc', 'nwxdrjem'])
