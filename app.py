@@ -11,14 +11,18 @@ from selenium.webdriver.common.action_chains import ActionChains
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
+from os.path import join, dirname
+from dotenv import load_dotenv
 
 
+dotenv_path = join(dirname(__file__), '.env')
+load_dotenv(dotenv_path)
+pins_per_layer = int(os.environ.get('PINS_PER_LAYER'))
 processName = {}
-pins_per_layer = 2
 pin_count = 0
 
       
-def logIn(mail, url, driver):
+def logIn(mail, driver):
     print("logging in...")
     googleLogin(mail, driver)
 
@@ -91,9 +95,9 @@ def google_click_next_button(driver):
 def googleLogin(mail, driver) :
     print("gmail logging in...")
     driver.get('https://accounts.google.com/signin/v2/identifier?passive=1209600&continue=https%3A%2F%2Fwww.google.com%2Fmaps%2Fd%2F&followup=https%3A%2F%2Fwww.google.com%2Fmaps%2Fd%2F&flowName=GlifWebSignIn&flowEntry=ServiceLogin')
-    mail_address = mail[1]
-    mail_pass = mail[2]
-    mail_active = mail[3]
+    mail_address = mail[0]
+    mail_pass = mail[1]
+    # mail_active = mail[2]
     print("opend browser")
     google_set_login(driver, mail_address)
     google_click_login_button(driver)
@@ -372,7 +376,10 @@ coordinate_col_name = sys.argv[2]
 text_col_name = sys.argv[3]
 
 url = 'https://accounts.google.com/'
-mail = ["1", 'janwheeler197335@gmail.com', 'aleiivrc', 'nwxdrjem']
+# mail = ['janwheeler197335@gmail.com', 'aleiivrc', 'nwxdrjem']
+mail_address = os.environ.get('MAIL_ADDRESS')
+mail_password = os.environ.get('MAIL_PASSWORD')
+mail = [mail_address, mail_password]
 
 ua = UserAgent()
 userAgent = ua.random
@@ -389,8 +396,8 @@ driver = webdriver.Chrome (executable_path = path, options = chrome_options )
 driver.set_window_size(1200,900)
 
 try:
-    processName[mail[0]] = logIn
-    processName[mail[0]](mail, url, driver)
+    processName["1"] = logIn
+    processName["1"](mail, driver)
     time.sleep(10)
     create_map(driver)
     time.sleep(10)
