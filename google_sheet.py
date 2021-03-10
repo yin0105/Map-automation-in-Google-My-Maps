@@ -1,10 +1,7 @@
-from openpyxl import load_workbook
 import sys, os, pickle
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
-import os, pickle, re
 
 
 if len(sys.argv) < 4:
@@ -22,9 +19,7 @@ print(coordinate_col_name)
 print(text_col_name)
 
 creds = None
-sheet_id =  file_name
-sheet_name =  "Hoja 1"
-sheet_range =  "A1:I10000"
+
 if os.path.exists('token.pickle'):
     with open('token.pickle', 'rb') as token:
         creds = pickle.load(token)
@@ -40,9 +35,16 @@ if os.path.exists('token.pickle'):
 
 service = build('sheets', 'v4', credentials=creds)
 
+sheet_id =  file_name
+sheet_metadata = service.spreadsheets().get(spreadsheetId=sheet_id).execute()
+sheets = sheet_metadata.get('sheets', '')
+sheet_name =  sheets[0]['properties']['title']
+print(sheet_name)
+sheet_range =  "A1:ZZ100000"
 # Call the Sheets API
-sheet = service.spreadsheets()
-result = sheet.values().get(spreadsheetId=sheet_id, range=sheet_name + "!" + sheet_range).execute()
+# sheet = service.spreadsheets()
+result = service.spreadsheets().values().get(spreadsheetId=sheet_id, range=sheet_name + "!" + sheet_range).execute()
+
 values = result.get('values', [])
 resp = ""
 if values:

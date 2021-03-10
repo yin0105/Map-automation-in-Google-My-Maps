@@ -1,72 +1,402 @@
+
+import time, sys, os, pickle
 from selenium import webdriver
-from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import TimeoutException
 from fake_useragent import UserAgent
-# from pynput.keyboard import Listener as key_listener
-# import time
-# import pprint
-# import msvcrt
-# import time, threading
+from openpyxl import load_workbook
+from selenium.webdriver.common.action_chains import ActionChains
+from google.auth.transport.requests import Request
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
 
 
-####################### Main #################################
-print("1")
+processName = {}
+pins_per_layer = 2
+pin_count = 0
+
+      
+def logIn(mail, url, driver):
+    print("logging in...")
+    googleLogin(mail, driver)
+
+
+def fail_with_error(message):
+    def decorator(fx):
+        def inner(*args, **kwargs):
+            try:
+                return fx(*args, **kwargs)
+            except Exception as e:
+                print(message)
+                raise e
+        return inner
+    return decorator
+
+
+@fail_with_error("Cannot set email address")
+def google_set_login(driver, mail_address):
+    try:
+        email_field = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, '//*[@id="identifierId"]')))
+        email_field.send_keys(mail_address)
+        print("Email address inserted")
+    except TimeoutException:
+        try:
+            email_field = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//input[@id='Email']")))
+            email_field.send_keys(mail_address)
+            print("Email address inserted")
+        except TimeoutException:
+            print("email field is not ready")
+    
+
+@fail_with_error("Cannot click login button")
+def google_click_login_button(driver):
+    try:
+        login_button = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, '//*[@id="identifierNext"]')))
+        login_button.click()
+        print("Login button clicked")
+    except TimeoutException:
+        try:
+            login_button = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//input[@id='next']")))
+            login_button.click()
+            print("Login button clicked")
+        except TimeoutException:
+            print("login button is not ready")
+
+
+@fail_with_error("Cannot set email password")
+def google_set_password(driver, password):
+    try:
+        password_field = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, '//*[@id="password"]/div[1]/div/div[1]/input')))
+        WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="password"]/div[1]/div/div[1]/input')))
+        password_field.send_keys(password)
+        print("Password inserted")
+    except TimeoutException:
+        print("password field is not ready")
+        pass
+
+
+@fail_with_error("Cannot click next button")
+def google_click_next_button(driver):
+    try:
+        next_button = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, '//*[@id="passwordNext"]')))
+        next_button.click()
+        print("Next button clicked")
+    except TimeoutException:
+        print("next button is not ready")
+        pass
+
+
+def googleLogin(mail, driver) :
+    print("gmail logging in...")
+    driver.get('https://accounts.google.com/signin/v2/identifier?passive=1209600&continue=https%3A%2F%2Fwww.google.com%2Fmaps%2Fd%2F&followup=https%3A%2F%2Fwww.google.com%2Fmaps%2Fd%2F&flowName=GlifWebSignIn&flowEntry=ServiceLogin')
+    mail_address = mail[1]
+    mail_pass = mail[2]
+    mail_active = mail[3]
+    print("opend browser")
+    google_set_login(driver, mail_address)
+    google_click_login_button(driver)
+    google_set_password(driver, mail_pass)
+    google_click_next_button(driver)
+
+
+@fail_with_error("Cannot click 'Create a new map' button")
+def create_map(driver):
+    try:
+        crate_map_btn = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//span[text()='+ Create a new map']/parent::span/parent::div")))
+        crate_map_btn.click()
+        print("'Crate a new map' button clicked")
+    except TimeoutException:
+        print("'Crate a new map' button is not ready")
+        pass
+
+
+@fail_with_error("Cannot create pins")
+def create_pins(driver, file_name, coordinate_col_name, text_col_name):
+    file_name_segs = file_name.split(".")
+    if len(file_name_segs) > 1 and file_name_segs[-1][:3].lower() == "xls":
+        create_pins_from_excel(driver, file_name, coordinate_col_name, text_col_name)
+    else:
+        create_pins_from_google_sheet(driver, file_name, coordinate_col_name, text_col_name)
+
+
+def create_pins_from_excel(driver, file_name, coordinate_col_name, text_col_name):
+    wb = load_workbook(filename = file_name)
+    sheet = wb.active
+    col_num = -1
+    coordinate_col_num = -1
+    text_col_num = -1
+    print(coordinate_col_name)
+    print(text_col_name)
+
+    for col in sheet[1]:
+        col_num += 1
+        print(col.value)
+        if col.value == coordinate_col_name: coordinate_col_num = col_num
+        if col.value == text_col_name: text_col_num = col_num
+
+    if coordinate_col_num == -1 or text_col_num == -1: 
+        print("Wrong Column Names")
+        exit()
+
+    for row in sheet[2:sheet.max_row]:
+        coordinate = row[coordinate_col_num].value
+        if coordinate == None : continue
+        if coordinate.strip() == "": continue
+        text = row[text_col_num].value.strip()
+        print(coordinate + " :: " + text)
+        lat_lng = coordinate.split(",")
+        create_pin(driver, float(lat_lng[0]), float(lat_lng[1]), text)
+
+
+def create_pins_from_google_sheet(driver, file_name, coordinate_col_name, text_col_name):
+    col_num = -1
+    coordinate_col_num = -1
+    text_col_num = -1
+    print(coordinate_col_name)
+    print(text_col_name)
+
+    creds = None
+
+    if os.path.exists('token.pickle'):
+        with open('token.pickle', 'rb') as token:
+            creds = pickle.load(token)
+
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
+                creds = flow.run_local_server(port=21000)
+            with open('token.pickle', 'wb') as token:
+                pickle.dump(creds, token)
+
+    service = build('sheets', 'v4', credentials=creds)
+
+    sheet_id =  file_name
+    sheet_metadata = service.spreadsheets().get(spreadsheetId=sheet_id).execute()
+    sheets = sheet_metadata.get('sheets', '')
+    sheet_name =  sheets[0]['properties']['title']
+    print(sheet_name)
+    sheet_range =  "A1:ZZ100000"
+    # Call the Sheets API
+    # sheet = service.spreadsheets()
+    result = service.spreadsheets().values().get(spreadsheetId=sheet_id, range=sheet_name + "!" + sheet_range).execute()
+
+    values = result.get('values', [])
+    resp = ""
+    if values:
+        # Get Header 
+        for col in values[0]:
+            col_num += 1
+            if col == coordinate_col_name: coordinate_col_num = col_num
+            if col == text_col_name: text_col_num = col_num
+        
+        if coordinate_col_num == -1 or text_col_num == -1: 
+            print("Wrong Column Names")
+            exit()
+
+        for row in values[1:]:
+            coordinate = row[coordinate_col_num]
+            if coordinate == None : continue
+            if coordinate.strip() == "": continue
+            text = row[text_col_num].strip()
+            print(coordinate + " :: " + text)
+            lat_lng = coordinate.split(",")
+            create_pin(driver, float(lat_lng[0]), float(lat_lng[1]), text)
+            
+    else:
+        print("Wrong Google Sheet Info")
+        exit()
+        
+
+
+@fail_with_error("Cannot click marker button")
+def marker_click(driver):
+    try:
+        marker_btn = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//div[@id='markerButton']")))
+        marker_btn.click()
+        print("marker_btn button clicked")
+    except TimeoutException:
+        print("marker_btn button is not ready")
+        pass
+    time.sleep(1)
+
+
+def name_map(driver, text):
+    try:
+        untitled_map_btn = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//div[@data-tooltip='Untitled map']")))
+        untitled_map_btn.click()
+        print("untitled_map_btn button clicked")
+    except TimeoutException:
+        print("untitled_map_btn button is not ready")
+        pass
+
+    try:
+        title_field = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//input[@type='text' and @placeholder='Untitled map']")))
+        title_field.clear()
+        title_field.send_keys(text)
+        print("title field is filled.")
+    except TimeoutException:
+        print("title field is not ready")
+        pass
+
+    try:
+        desc_field = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//textarea[@placeholder='Add a description to help people understand your map']")))
+        desc_field.clear()
+        desc_field.send_keys(text)
+        print("description field is filled.")
+    except TimeoutException:
+        print("description field is not ready")
+        pass
+
+    try:
+        save_btn = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//div[@id='update-map']//button[@name='save']")))
+        save_btn.click()
+        print("save button clicked")
+    except TimeoutException:
+        print("save button is not ready")
+        pass
+    time.sleep(2)
+
+
+def name_layer(driver, text):
+    try:
+        untitled_layer_btn = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//div[@data-tooltip='Untitled layer']")))
+        untitled_layer_btn.click()
+        print("untitled_layer_btn button clicked")
+    except TimeoutException:
+        print("untitled_layer_btn button is not ready")
+        pass
+
+    try:
+        title_field = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//input[@type='text' and @value='Untitled layer']")))
+        title_field.clear()
+        title_field.send_keys(text)
+        print("title field is filled.")
+    except TimeoutException:
+        print("title field is not ready")
+        pass
+
+    try:
+        save_btn = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//div[@id='update-layer-name']//button[@name='save']")))
+        save_btn.click()
+        print("save button clicked")
+    except TimeoutException:
+        print("save button is not ready")
+        pass
+    time.sleep(2)
+
+
+def add_layer(driver):
+    try:
+        add_layer_btn = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//li[@id='map-action-add-layer']")))
+        add_layer_btn.click()        
+        print("add_layern button clicked")
+    except TimeoutException:
+        print("add_layer button is not ready")
+        pass
+    time.sleep(2)
+
+
+@fail_with_error("Cannot create pin")
+def create_pin(driver, lat, lng, text): 
+    global pin_count, pins_per_layer
+    pin_count += 1
+    if pin_count == 1: name_map(driver, text)
+    if pin_count % pins_per_layer == 1: 
+        if (pin_count - 1) // pins_per_layer > 0: add_layer(driver)
+        name_layer(driver, text)
+    print(driver.current_url) 
+    url_segs = driver.current_url.split("&")
+    if lat > 0 : 
+        lat += 0.000005 
+    else:
+        lat -= 0.000005
+    if lng > 0 : 
+        lng += 0.000005 
+    else:
+        lng -= 0.000005
+
+    url_segs[-2] = "ll=" + str(lat) + "%2C" +str(lng)
+    url_segs[-1] = "z=22"
+    try:
+        driver.get("&".join(url_segs))
+        time.sleep(3)
+        sel_layer = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "(//div[contains(@id, 'layer-header')])[last()]/parent::div")))
+        sel_layer.click()
+        marker_click(driver)
+        action = ActionChains(driver)
+        elem_origin = driver.find_element_by_xpath('//html')
+        print(elem_origin.rect)
+        bounds = elem_origin.size
+        print (bounds)
+        
+        action.move_to_element_with_offset(elem_origin, bounds['width'] / 2, bounds['height'] / 2)
+        time.sleep(2)
+        print(str(bounds['width'] / 2) + " , " + str(bounds['height'] / 2))
+        action.click()
+        print("clicked")
+        action.perform()
+        print("performed")
+        time.sleep(2)
+
+        title_field = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//div[@id='map-infowindow-attr-name-value']")))
+        title_field.clear()
+        title_field.send_keys(text)
+        time.sleep(2)
+
+        desc_field = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//div[@id='map-infowindow-attr-description-value']")))
+        desc_field.send_keys(text)
+        time.sleep(2)
+
+        save_btn = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//div[@role='button' and text()='Save']")))
+        save_btn.click()
+        print("save_btn clicked")
+
+        print("Crated a pin")
+        time.sleep(2)
+
+    except TimeoutException:
+        print("Cannot create pin")
+        pass
+
+
+if len(sys.argv) < 4:
+    print("python 3.py [file name] [coordinate column name] [text column name]")
+    exit()
+
+file_name = sys.argv[1]
+coordinate_col_name = sys.argv[2]
+text_col_name = sys.argv[3]
+
+url = 'https://accounts.google.com/'
+mail = ["1", 'janwheeler197335@gmail.com', 'aleiivrc', 'nwxdrjem']
+
 ua = UserAgent()
-print("16")
 userAgent = ua.random
-print("17")
 userAgent = userAgent.split(" ")
-# userAgent[0] = "Chrome"
+# userAgent[0] = "Mozilla/5.0"
 userAgent = " ".join(userAgent)
-print(userAgent)
-# userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36'
+print("userAgent = " + userAgent)
 chrome_options = webdriver.ChromeOptions()
 chrome_options.add_argument('user-agent={0}'.format(userAgent))
-
-
-activateListener = False
 path = '.\\webdriver\\chromedriver.exe'
 chrome_options.add_argument('--log-level=0')
-browser = webdriver.Chrome (executable_path = path, options = chrome_options )
-browser.get("https://www.google.com/maps/d/")
-elem = browser.find_element_by_xpath("//input[@type='email']")
-elem.clear()
-elem.send_keys("evgenyashyvaevaweb@gmail.com")
-elem = browser.find_element_by_xpath("//button/span[text()='Next']/parent::button")
-elem.click()
+driver = webdriver.Chrome (executable_path = path, options = chrome_options )
+# driver.maximize_window()
+driver.set_window_size(1200,900)
 
-# elem = browser.find_element_by_xpath("//span[text()='+ Create a new map']/parent::span/parent::div")
-# elem.click()
-
-# //div[@data-tooltip="Import data from a CSV file, spreadsheet or KML."]
-
-# for elem in elems:
-#     pprint.pprint(elem)
-
-# # elem.send_keys(webdriver.common.keys.Keys.RETURN)
-
-# elem = browser.find_element_by_partial_link_text("Log In") 
-# elem.click()
-
-# ########################  Log In  ###################################
-# try:
-#     elem = WebDriverWait(browser, 10).until(EC.presence_of_element_located((By.XPATH, "//input[@class='NativeElement ng-untouched ng-pristine ng-invalid ng-star-inserted' and @type='email']")))
-# except:
-#     print("Log In timed out.")
-# elem.clear()
-# elem.send_keys("evgenyashyvaevaweb@gmail.com")
-# elem = browser.find_element_by_xpath("//input[@class='NativeElement ng-untouched ng-pristine ng-invalid ng-star-inserted' and @type='password']")
-# elem.clear()
-# elem.send_keys("Shamora_bich_2020")
-# elem = browser.find_element_by_xpath("//button[@class='ButtonElement ng-star-inserted' and @type='submit']")
-# elem.click()
-
-# time.sleep(5)
-# browser.get("https://www.freelancer.com/search/projects") 
-
-# time.sleep(5)
-# activateListener = True
-# original_window = browser.current_window_handle
-
+try:
+    processName[mail[0]] = logIn
+    processName[mail[0]](mail, url, driver)
+    time.sleep(10)
+    create_map(driver)
+    time.sleep(10)
+    create_pins(driver, file_name, coordinate_col_name, text_col_name)
+except Exception as e:
+    # driver.save_screenshot(datetime.now().strftime("screenshot_%Y%m%d_%H%M%S_%f.png"))
+    print(e)
+finally:
+    pass
