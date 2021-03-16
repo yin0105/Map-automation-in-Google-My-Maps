@@ -122,13 +122,16 @@ def work_log(mail):
   userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36'
   chrome_options = webdriver.ChromeOptions()
   chrome_options.add_argument('user-agent={0}'.format(userAgent))
+  PROXY = "127.0.0.1:9999" # IP:PORT or HOST:PORT
+
+  # chrome_options.add_argument('--proxy-server=%s' % PROXY)
 #   proxy_index = random.randint(Proxies_num-1)
 #   proxies = Proxies[proxy_index][1]
 #   print("Using proxy:", proxies)
 #   chrome_options.add_argument('--proxy-server=%s' % proxies)
   path = '.\\webdriver\\chromedriver.exe'
   chrome_options.add_argument('--log-level=0')
-  driver = webdriver.Chrome (executable_path = path, options = chrome_options )
+  driver = webdriver.Chrome (executable_path = path, options = chrome_options, port=9999 )
 
 #   driver = webdriver.Chrome(chrome_options=chrome_options)
   try:

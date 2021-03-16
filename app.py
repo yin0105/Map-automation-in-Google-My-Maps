@@ -18,6 +18,8 @@ from dotenv import load_dotenv
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
 pins_per_layer = int(os.environ.get('PINS_PER_LAYER'))
+layer_count = int(os.environ.get('LAYER_COUNT'))
+
 processName = {}
 pin_count = 0
 
@@ -144,14 +146,18 @@ def create_pins_from_excel(driver, file_name, coordinate_col_name, text_col_name
         print("Wrong Column Names")
         exit()
 
-    for row in sheet[2:sheet.max_row]:
-        coordinate = row[coordinate_col_num].value
-        if coordinate == None : continue
-        if coordinate.strip() == "": continue
-        text = row[text_col_num].value.strip()
-        print(coordinate + " :: " + text)
-        lat_lng = coordinate.split(",")
-        create_pin(driver, float(lat_lng[0]), float(lat_lng[1]), text)
+    for layer_num in range(0, layer_count):
+        count = 0
+        for row in sheet[2:sheet.max_row]:
+            coordinate = row[coordinate_col_num].value
+            if coordinate == None : continue
+            if coordinate.strip() == "": continue
+            text = row[text_col_num].value.strip()
+            print(coordinate + " :: " + text)
+            lat_lng = coordinate.split(",")
+            count += 1
+            if count > pins_per_layer: break
+            create_pin(driver, float(lat_lng[0]), float(lat_lng[1]), text)
 
 
 def create_pins_from_google_sheet(driver, file_name, coordinate_col_name, text_col_name):
@@ -201,14 +207,18 @@ def create_pins_from_google_sheet(driver, file_name, coordinate_col_name, text_c
             print("Wrong Column Names")
             exit()
 
-        for row in values[1:]:
-            coordinate = row[coordinate_col_num]
-            if coordinate == None : continue
-            if coordinate.strip() == "": continue
-            text = row[text_col_num].strip()
-            print(coordinate + " :: " + text)
-            lat_lng = coordinate.split(",")
-            create_pin(driver, float(lat_lng[0]), float(lat_lng[1]), text)
+        for layer_num in range(0, layer_count):
+            count = 0
+            for row in values[1:]:
+                coordinate = row[coordinate_col_num]
+                if coordinate == None : continue
+                if coordinate.strip() == "": continue
+                text = row[text_col_num].strip()
+                print(coordinate + " :: " + text)
+                lat_lng = coordinate.split(",")
+                count += 1
+                if count > pins_per_layer: break
+                create_pin(driver, float(lat_lng[0]), float(lat_lng[1]), text)
             
     else:
         print("Wrong Google Sheet Info")
