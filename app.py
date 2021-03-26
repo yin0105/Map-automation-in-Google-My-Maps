@@ -43,55 +43,92 @@ def fail_with_error(message):
 
 @fail_with_error("Cannot set email address")
 def google_set_login(driver, mail_address):
-    try:
-        email_field = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, '//*[@id="identifierId"]')))
-        email_field.send_keys(mail_address)
-        print("Email address inserted")
-    except TimeoutException:
+    while True:
         try:
-            email_field = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//input[@id='Email']")))
+            email_field = driver.find_element_by_xpath("//*[@id='identifierId']")
             email_field.send_keys(mail_address)
             print("Email address inserted")
-        except TimeoutException:
-            print("email field is not ready")
+            break
+        except :
+            time.sleep(1)
+
+    # try:
+    #     email_field = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, '//*[@id="identifierId"]')))
+    #     email_field.send_keys(mail_address)
+    #     print("Email address inserted")
+    # except TimeoutException:
+    #     try:
+    #         email_field = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//input[@id='Email']")))
+    #         email_field.send_keys(mail_address)
+    #         print("Email address inserted")
+    #     except TimeoutException:
+    #         print("email field is not ready")
     
 
 @fail_with_error("Cannot click login button")
 def google_click_login_button(driver):
-    try:
-        login_button = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, '//*[@id="identifierNext"]')))
-        login_button.click()
-        print("Login button clicked")
-    except TimeoutException:
+    while True:
         try:
-            login_button = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//input[@id='next']")))
+            login_button = driver.find_element_by_xpath("//*[@id='identifierNext']")
             login_button.click()
             print("Login button clicked")
-        except TimeoutException:
-            print("login button is not ready")
+            break
+        except :
+            time.sleep(1)
+
+    # try:
+    #     login_button = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, '//*[@id="identifierNext"]')))
+    #     login_button.click()
+    #     print("Login button clicked")
+    # except TimeoutException:
+    #     try:
+    #         login_button = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//input[@id='next']")))
+    #         login_button.click()
+    #         print("Login button clicked")
+    #     except TimeoutException:
+    #         print("login button is not ready")
 
 
 @fail_with_error("Cannot set email password")
 def google_set_password(driver, password):
-    try:
-        password_field = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, '//*[@id="password"]/div[1]/div/div[1]/input')))
-        WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="password"]/div[1]/div/div[1]/input')))
-        password_field.send_keys(password)
-        print("Password inserted")
-    except TimeoutException:
-        print("password field is not ready")
-        pass
+    while True:
+        try:
+            password_field = driver.find_element_by_xpath("//*[@id='password']/div[1]/div/div[1]/input")
+            # WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="password"]/div[1]/div/div[1]/input')))
+            password_field.send_keys(password)
+            print("Password inserted")
+            break
+        except :
+            time.sleep(1)
+
+    # try:
+    #     password_field = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, '//*[@id="password"]/div[1]/div/div[1]/input')))
+    #     WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="password"]/div[1]/div/div[1]/input')))
+    #     password_field.send_keys(password)
+    #     print("Password inserted")
+    # except TimeoutException:
+    #     print("password field is not ready")
+    #     pass
 
 
 @fail_with_error("Cannot click next button")
 def google_click_next_button(driver):
-    try:
-        next_button = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, '//*[@id="passwordNext"]')))
-        next_button.click()
-        print("Next button clicked")
-    except TimeoutException:
-        print("next button is not ready")
-        pass
+    while True:
+        try:
+            next_button = driver.find_element_by_xpath("//*[@id='passwordNext']")
+            next_button.click()
+            print("Next button clicked")
+            break
+        except :
+            time.sleep(1)
+
+    # try:
+    #     next_button = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, '//*[@id="passwordNext"]')))
+    #     next_button.click()
+    #     print("Next button clicked")
+    # except TimeoutException:
+    #     print("next button is not ready")
+    #     pass
 
 
 def googleLogin(mail, driver) :
@@ -110,7 +147,7 @@ def googleLogin(mail, driver) :
 @fail_with_error("Cannot click 'Create a new map' button")
 def create_map(driver):
     try:
-        crate_map_btn = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//span[text()='+ Create a new map']/parent::span/parent::div")))
+        crate_map_btn = driver.find_element_by_xpath("//span[text()='+ Create a new map']/parent::span/parent::div")
         crate_map_btn.click()
         print("'Crate a new map' button clicked")
     except TimeoutException:
@@ -228,91 +265,97 @@ def create_pins_from_google_sheet(driver, file_name, coordinate_col_name, text_c
 
 @fail_with_error("Cannot click marker button")
 def marker_click(driver):
-    try:
-        marker_btn = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//div[@id='markerButton']")))
-        marker_btn.click()
-        print("marker_btn button clicked")
-    except TimeoutException:
-        print("marker_btn button is not ready")
-        pass
-    time.sleep(1)
+    while True:
+        try:
+            marker_btn = driver.find_element_by_xpath("//div[@id='markerButton']")
+            marker_btn.click()
+            print("marker_btn button clicked")
+            break
+        except :
+            time.sleep(1)
+    
 
 
 def name_map(driver, text):
-    try:
-        untitled_map_btn = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//div[@data-tooltip='Untitled map']")))
-        untitled_map_btn.click()
-        print("untitled_map_btn button clicked")
-    except TimeoutException:
-        print("untitled_map_btn button is not ready")
-        pass
+    while True:
+        try:
+            untitled_map_btn = driver.find_element_by_xpath("//div[@data-tooltip='Untitled map']")
+            untitled_map_btn.click()
+            print("untitled_map_btn button clicked")
+            break
+        except :
+            time.sleep(1)
 
-    try:
-        title_field = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//input[@type='text' and @placeholder='Untitled map']")))
-        title_field.clear()
-        title_field.send_keys(text)
-        print("title field is filled.")
-    except TimeoutException:
-        print("title field is not ready")
-        pass
+    while True:
+        try:
+            title_field = driver.find_element_by_xpath("//input[@type='text' and @placeholder='Untitled map']")
+            title_field.clear()
+            title_field.send_keys(text)
+            print("title field is filled.")
+            break
+        except :
+            time.sleep(1)
+    
+    while True:
+        try:
+            desc_field = driver.find_element_by_xpath("//textarea[@placeholder='Add a description to help people understand your map']")
+            desc_field.clear()
+            desc_field.send_keys(text)
+            print("description field is filled.")
+            break
+        except :
+            time.sleep(1)
 
-    try:
-        desc_field = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//textarea[@placeholder='Add a description to help people understand your map']")))
-        desc_field.clear()
-        desc_field.send_keys(text)
-        print("description field is filled.")
-    except TimeoutException:
-        print("description field is not ready")
-        pass
-
-    try:
-        save_btn = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//div[@id='update-map']//button[@name='save']")))
-        save_btn.click()
-        print("save button clicked")
-    except TimeoutException:
-        print("save button is not ready")
-        pass
-    time.sleep(2)
-
+    while True:
+        try:
+            save_btn = driver.find_element_by_xpath("//div[@id='update-map']//button[@name='save']")
+            save_btn.click()
+            print("save button clicked")
+            break
+        except :
+            time.sleep(1)
+        
 
 def name_layer(driver, text):
-    try:
-        untitled_layer_btn = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//div[@data-tooltip='Untitled layer']")))
-        untitled_layer_btn.click()
-        print("untitled_layer_btn button clicked")
-    except TimeoutException:
-        print("untitled_layer_btn button is not ready")
-        pass
+    while True:
+        try:
+            untitled_layer_btn = driver.find_element_by_xpath("//div[@data-tooltip='Untitled layer']")
+            untitled_layer_btn.click()
+            print("untitled_layer_btn button clicked")
+            break
+        except :
+            time.sleep(1)
 
-    try:
-        title_field = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//input[@type='text' and @value='Untitled layer']")))
-        title_field.clear()
-        title_field.send_keys(text)
-        print("title field is filled.")
-    except TimeoutException:
-        print("title field is not ready")
-        pass
+    while True:
+        try:
+            title_field = driver.find_element_by_xpath("//input[@type='text' and @value='Untitled layer']")
+            title_field.clear()
+            title_field.send_keys(text)
+            print("title field is filled.")
+            break
+        except :
+            time.sleep(1)
 
-    try:
-        save_btn = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//div[@id='update-layer-name']//button[@name='save']")))
-        save_btn.click()
-        print("save button clicked")
-    except TimeoutException:
-        print("save button is not ready")
-        pass
-    time.sleep(2)
+    while True:
+        try:
+            save_btn = driver.find_element_by_xpath("//div[@id='update-layer-name']//button[@name='save']")
+            save_btn.click()
+            print("save button clicked")
+            break
+        except :
+            time.sleep(1)
 
 
 def add_layer(driver):
-    try:
-        add_layer_btn = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//li[@id='map-action-add-layer']")))
-        add_layer_btn.click()        
-        print("add_layern button clicked")
-    except TimeoutException:
-        print("add_layer button is not ready")
-        pass
-    time.sleep(2)
-
+    while True:
+        try:
+            add_layer_btn = driver.find_element_by_xpath("//li[@id='map-action-add-layer']")
+            add_layer_btn.click()        
+            print("add_layern button clicked")
+            break
+        except :
+            time.sleep(1)
+   
 
 @fail_with_error("Cannot create pin")
 def create_pin(driver, lat, lng, text): 
@@ -335,17 +378,32 @@ def create_pin(driver, lat, lng, text):
 
     url_segs[-2] = "ll=" + str(lat) + "%2C" +str(lng)
     url_segs[-1] = "z=22"
+    print("&".join(url_segs))
     try:
         driver.get("&".join(url_segs))
-        time.sleep(3)
-        sel_layer = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "(//div[contains(@id, 'layer-header')])[last()]/parent::div")))
-        sel_layer.click()
+        time.sleep(1)
+        try:
+            obj = driver.switch_to.alert
+            obj.accept()
+        except:
+            pass
+        time.sleep(1)
+
+        while True:
+            try:
+                sel_layer = driver.find_element_by_xpath("(//div[contains(@id, 'layer-header')])[last()]/parent::div")
+                sel_layer.click()
+                break
+            except :
+                time.sleep(1)
+        
         marker_click(driver)
         action = ActionChains(driver)
         elem_origin = driver.find_element_by_xpath('//html')
         print(elem_origin.rect)
         bounds = elem_origin.size
         print (bounds)
+        time.sleep(2)
         
         action.move_to_element_with_offset(elem_origin, bounds['width'] / 2, bounds['height'] / 2)
         time.sleep(2)
@@ -356,21 +414,36 @@ def create_pin(driver, lat, lng, text):
         print("performed")
         time.sleep(2)
 
-        title_field = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//div[@id='map-infowindow-attr-name-value']")))
-        title_field.clear()
-        title_field.send_keys(text)
-        time.sleep(2)
+        while True:
+            try:
+                title_field = driver.find_element_by_xpath("//div[@id='map-infowindow-attr-name-value']")
+                title_field.clear()
+                title_field.send_keys(text)
+                break
+            except :
+                time.sleep(1)
+        
+        # time.sleep(2)
 
-        desc_field = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//div[@id='map-infowindow-attr-description-value']")))
-        desc_field.send_keys(text)
-        time.sleep(2)
+        while True:
+            try:
+                desc_field = driver.find_element_by_xpath("//div[@id='map-infowindow-attr-description-value']")
+                desc_field.send_keys(text)
+                break
+            except :
+                time.sleep(1)
 
-        save_btn = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//div[@role='button' and text()='Save']")))
-        save_btn.click()
-        print("save_btn clicked")
+        while True:
+            try:
+                save_btn = driver.find_element_by_xpath("//div[@role='button' and text()='Save']")
+                save_btn.click()
+                print("save_btn clicked")
+                break
+            except :
+                time.sleep(1)
 
         print("Crated a pin")
-        time.sleep(2)
+        # time.sleep(2)
 
     except TimeoutException:
         print("Cannot create pin")
