@@ -290,8 +290,9 @@ def name_map(driver, text):
         try:
             title_field = driver.find_element_by_xpath("//input[@type='text' and @placeholder='Untitled map']")
             title_field.clear()
-            title_field.send_keys(text)
+            title_field.send_keys((" ".join(text.splitlines())))
             print("title field is filled.")
+            print("#############" + text + "#########")
             break
         except :
             time.sleep(1)
@@ -300,7 +301,7 @@ def name_map(driver, text):
         try:
             desc_field = driver.find_element_by_xpath("//textarea[@placeholder='Add a description to help people understand your map']")
             desc_field.clear()
-            desc_field.send_keys(text)
+            desc_field.send_keys((" ".join(text.splitlines())))
             print("description field is filled.")
             break
         except :
@@ -330,7 +331,7 @@ def name_layer(driver, text):
         try:
             title_field = driver.find_element_by_xpath("//input[@type='text' and @value='Untitled layer']")
             title_field.clear()
-            title_field.send_keys(text)
+            title_field.send_keys((" ".join(text.splitlines())))
             print("title field is filled.")
             break
         except :
@@ -418,7 +419,7 @@ def create_pin(driver, lat, lng, text):
             try:
                 title_field = driver.find_element_by_xpath("//div[@id='map-infowindow-attr-name-value']")
                 title_field.clear()
-                title_field.send_keys(text)
+                title_field.send_keys((" ".join(text.splitlines())))
                 break
             except :
                 time.sleep(1)
@@ -428,7 +429,7 @@ def create_pin(driver, lat, lng, text):
         while True:
             try:
                 desc_field = driver.find_element_by_xpath("//div[@id='map-infowindow-attr-description-value']")
-                desc_field.send_keys(text)
+                desc_field.send_keys((" ".join(text.splitlines())))
                 break
             except :
                 time.sleep(1)
@@ -483,7 +484,7 @@ try:
     processName["1"](mail, driver)
     time.sleep(10)
     create_map(driver)
-    time.sleep(10)
+    time.sleep(20)
     create_pins(driver, file_name, coordinate_col_name, text_col_name)
 except Exception as e:
     # driver.save_screenshot(datetime.now().strftime("screenshot_%Y%m%d_%H%M%S_%f.png"))
